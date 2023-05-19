@@ -1,0 +1,107 @@
+body {
+	background: url();
+	background-color:rgb(29, 118, 243);
+	font-family: 'Aldrich';font-size: 22px;
+}
+
+.sentence
+{
+    padding:10px 100px 0px 550px ;
+	color: whitesmoke;
+}
+.container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 50vh;
+	width: 100vw;
+}
+
+#container {
+	width: 350px;
+	padding: 8px 8px 2px 8px;
+	margin: 5px auto;
+	background-color: rgb(123, 123, 189);
+	border-radius: 10px;
+	border-top: 10px solid #FFF;
+	border-right: 10px solid #FFF;
+	border-bottom: 10px solid #C1C1C1;
+	border-left: 10px solid #C1C1C1;
+	box-shadow: -3px 3px 7px rgba(0, 0, 0, .6), inset -100px 0px 100px rgba(255, 255, 255, .5);
+}
+
+#display {
+	display: block;
+	margin: 15px auto;
+	height: 42px;
+	width: 274px;
+	padding: 0 20px;
+	border-radius: 4px;
+	border-top: 2px solid #C1C1C1;
+	border-right: 2px solid #C1C1C1;
+	border-bottom: 2px solid #FFF;
+	border-left: 2px solid #FFF;
+	background-color: #FFF;
+	box-shadow: inset 0px 0px 10px #030303, inset 0px -20px 1px rgba(150, 150, 150, .2);
+	font-size: 28px;
+	color: #666;
+	text-align: right;
+	font-weight: 400;
+}
+
+.button {
+	display: inline-block;
+	margin-left: 25px;
+	margin-right: 10px;
+	width: 50px;
+	height: 42px;
+	font-size: 18px;
+	font-weight: 100px;
+	border-radius: 10px;
+}
+
+.mathButtons {
+	margin: 2px 2px 6px 2px;
+	color: lightblue;
+	text-shadow: -1px -1px 0px #44006F;
+	background-color: #7f7771;
+	border-top: 2px solid #C1C1C1;
+	border-right: 2px solid #C1C1C1;
+	border-bottom: 2px solid #181818;
+	border-left: 2px solid #181818;
+	box-shadow: 0px 0px 2px #030303, inset 0px -20px 1px #2E2E2E;
+}
+
+.digits {
+	color: #f6fafc;
+	text-shadow: 1px 1px 0px rgb(0, 0, 0);
+	background-color: #040505;
+	border-top: 2px solid #FFF;
+	border-right: 2px solid #FFF;
+	border-bottom: 2px solid #C1C1C1;
+	border-left: 2px solid #C1C1C1;
+	border-radius: 4px;
+	box-shadow: 0px 0px 2px #353333, inset 0px -20px 1px #4d4b4b;
+}
+
+.digits:hover,
+.mathButtons:hover,
+#clearButton:hover {
+	background-color: #15aa7d;
+	box-shadow: 0px 0px 2px #141312, inset 0px -20px 1px #11100f;
+	border-top: 2px solid #FFF;
+	border-right: 2px solid #FFF;
+	border-bottom: 2px solid #00ae09;
+	border-left: 2px solid #00ae09;
+}
+
+#clearButton {
+	color: rgb(255, 253, 253);
+	text-shadow: -1px -1px 0px #44006F;
+	background-color: #D20000;
+	border-top: 2px solid #FF8484;
+	border-right: 2px solid #FF8484;
+	border-bottom: 2px solid #800000;
+	border-left: 2px solid #800000;
+	box-shadow: 0px 0px 2px #030303, inset 0px -20px 1px #B00000;
+}
