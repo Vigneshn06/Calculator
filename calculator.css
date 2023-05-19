@@ -6,7 +6,8 @@ body {
 
 .sentence
 {
-    padding:10px 100px 0px 550px ;
+    
+	text-align:center;
 	color: whitesmoke;
 }
 .container {
