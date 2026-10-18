@@ -1,47 +1,81 @@
-<html>
-<head>
-  <meta charset="utf-8">
-  <link href='https://fonts.googleapis.com/css?family=Aldrich' rel='stylesheet'>
-  <link rel="stylesheet" href="calculator.css"/>
-    <title> calculator </title>
-</head>
-<body>
-  <heading><h1 class="sentence"> <b>Calculator</b> </h1></heading>
-    <div class="container">
-    	<fieldset id="container">
-    		<form name="calculator">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="A modern, keyboard-friendly calculator with history, scientific functions and dark mode." />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>Calculator</title>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <h1>Calculator</h1>
+        <div class="actions">
+          <button id="undoBtn" class="icon-btn" aria-label="Undo" title="Undo (Ctrl/⌘+Z)">↶</button>
+          <button id="sciToggle" class="icon-btn" aria-pressed="false" title="Scientific mode">fx</button>
+          <button id="historyToggle" class="icon-btn" aria-label="Show history" title="History">🕘</button>
+          <button id="themeToggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme">🌓</button>
+        </div>
+      </header>
 
-    			<input id="display" type="text" name="display" readonly>
+      <section class="calc" aria-label="Calculator">
+        <div class="screen">
+          <div id="expr" class="expr" aria-live="off"></div>
+          <output id="result" class="result" aria-live="polite">0</output>
+        </div>
 
-    			<input class="button digits" type="button" value="7" onclick="calculator.display.value += '7'">
-    			<input class="button digits" type="button" value="8" onclick="calculator.display.value += '8'">
-    			<input class="button digits" type="button" value="9" onclick="calculator.display.value += '9'">
-    			<input class="button mathButtons" type="button" value="+" onclick="calculator.display.value += ' + '">
-    			<br>
-    			<input class="button digits" type="button" value="4" onclick="calculator.display.value += '4'">
-    			<input class="button digits" type="button" value="5" onclick="calculator.display.value += '5'">
-    			<input class="button digits" type="button" value="6" onclick="calculator.display.value += '6'">
-    			<input class="button mathButtons" type="button" value="-" onclick="calculator.display.value += ' - '">
-    			<br>
-    			<input class="button digits" type="button" value="1" onclick="calculator.display.value += '1'">
-    			<input class="button digits" type="button" value="2" onclick="calculator.display.value += '2'">
-    			<input class="button digits" type="button" value="3" onclick="calculator.display.value += '3'">
-    			<input class="button mathButtons" type="button" value="x" onclick="calculator.display.value += ' * '">
-    			<br>
-                <input class="button digits" type="button" value="0" onclick="calculator.display.value += '0'">
-                <input class="button digits" type="button" value="00" onclick="calculator.display.value += '00'">
-				<input class="button digits" type="button" value="000" onclick="calculator.display.value += '000'">
-				<input class="button mathButtons" type="button" value="/" onclick="calculator.display.value += ' / '">
-				
-                <br>
-                <center>
-					
-    			<input id="clearButton" class="button" type="button" value="CLR" onclick="calculator.display.value = ''">
-    			
-    			<input class="button mathButtons" type="button" value="ANS" onclick="calculator.display.value =eval(calculator.display.value)">
-    			</center>
-    		</form>
-    	</fieldset>
-    </div>
-</body>
+        <div id="keys" class="keys">
+          <div class="sci" id="sciKeys">
+            <button data-k="sqrt(">√</button>
+            <button data-k="^">xʸ</button>
+            <button data-k="(">(</button>
+            <button data-k=")">)</button>
+            <button data-k="sin(">sin</button>
+            <button data-k="cos(">cos</button>
+            <button data-k="tan(">tan</button>
+            <button data-k="log(">log</button>
+            <button data-k="ln(">ln</button>
+            <button data-k="pi">π</button>
+            <button data-k="e">e</button>
+            <button data-k="!">x!</button>
+          </div>
+          <button data-a="clear" class="fn">AC</button>
+          <button data-a="back" class="fn" aria-label="Backspace">⌫</button>
+          <button data-k="%" class="fn">%</button>
+          <button data-k="/" class="op" aria-label="divide">÷</button>
+          <button data-k="7">7</button>
+          <button data-k="8">8</button>
+          <button data-k="9">9</button>
+          <button data-k="*" class="op" aria-label="multiply">×</button>
+          <button data-k="4">4</button>
+          <button data-k="5">5</button>
+          <button data-k="6">6</button>
+          <button data-k="-" class="op" aria-label="minus">−</button>
+          <button data-k="1">1</button>
+          <button data-k="2">2</button>
+          <button data-k="3">3</button>
+          <button data-k="+" class="op" aria-label="plus">+</button>
+          <button data-a="neg" class="fn" aria-label="Toggle sign">±</button>
+          <button data-k="0">0</button>
+          <button data-k=".">.</button>
+          <button data-a="equals" class="eq" aria-label="equals">=</button>
+        </div>
+      </section>
+
+      <aside id="history" class="history" hidden aria-label="History">
+        <div class="history-head">
+          <h2>History</h2>
+          <button id="clearHistory" class="link-btn">Clear</button>
+        </div>
+        <ul id="historyList"></ul>
+      </aside>
+
+      <p class="hint">Tip: use your keyboard · Enter = · Esc = clear · Ctrl/⌘+Z = undo · Ctrl/⌘+C copies the result</p>
+      <div id="toast" class="toast" role="status"></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
