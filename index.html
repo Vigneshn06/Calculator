@@ -23,6 +23,8 @@
 
       <section class="calc" aria-label="Calculator">
         <div class="screen">
+          <ul id="recent" class="recent" aria-label="Recent calculations"></ul>
+          <div id="memBadge" class="mem-badge"></div>
           <div id="expr" class="expr" aria-live="off"></div>
           <output id="result" class="result" aria-live="polite">0</output>
         </div>
@@ -42,6 +44,10 @@
             <button data-k="e">e</button>
             <button data-k="!">x!</button>
           </div>
+          <button data-a="mc" class="mem" title="Memory clear">MC</button>
+          <button data-a="mr" class="mem" title="Memory recall">MR</button>
+          <button data-a="mplus" class="mem" title="Add to memory">M+</button>
+          <button data-a="mminus" class="mem" title="Subtract from memory">M−</button>
           <button data-a="clear" class="fn">AC</button>
           <button data-a="back" class="fn" aria-label="Backspace">⌫</button>
           <button data-k="%" class="fn">%</button>

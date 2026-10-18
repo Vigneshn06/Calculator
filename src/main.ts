@@ -1,7 +1,7 @@
 import "./style.css";
 import { CalcError, evaluate, formatNumber } from "./evaluate";
 
-type HistoryItem = { expr: string; result: string };
+type HistoryItem = { expr: string; result: string; raw?: string };
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const exprEl = $("expr");
@@ -10,6 +10,8 @@ const keysEl = $("keys");
 const historyEl = $("history");
 const historyList = $("historyList");
 const toast = $("toast");
+const recentEl = $("recent");
+const memBadge = $("memBadge");
 
 const store = {
   get<T>(key: string, fallback: T): T {
@@ -52,6 +54,46 @@ function undo() {
   render();
 }
 
+// Result display: keep the raw value in a data attribute, show it with thousands separators.
+const group = (raw: string) =>
+  /^-?\d+(\.\d*)?$/.test(raw)
+    ? raw.replace(/^(-?)(\d+)/, (_, sign: string, int: string) => sign + int.replace(/\B(?=(\d{3})+$)/g, ","))
+    : raw;
+const getRaw = () => resultEl.dataset.raw ?? "0";
+function setResult(raw: string) {
+  resultEl.dataset.raw = raw;
+  resultEl.textContent = group(raw);
+  resultEl.classList.remove("error");
+}
+
+// Memory (MC / MR / M+ / M-), persisted
+let memory = store.get<number>("calc.memory", 0);
+function renderMemory() {
+  memBadge.textContent = memory !== 0 ? `M = ${group(formatNumber(memory))}` : "";
+}
+function currentValue(): number | null {
+  try {
+    return evaluate(justEvaluated ? getRaw() : expr || "0");
+  } catch {
+    showToast("Finish the expression first");
+    return null;
+  }
+}
+function memoryAction(a: string) {
+  if (a === "mc") memory = 0;
+  else if (a === "mr") {
+    input(formatNumber(memory));
+    return;
+  } else {
+    const v = currentValue();
+    if (v === null) return;
+    memory += a === "mplus" ? v : -v;
+    showToast(a === "mplus" ? "Added to memory" : "Subtracted from memory");
+  }
+  store.set("calc.memory", memory);
+  renderMemory();
+}
+
 const OPERATORS = "+-*/^";
 const pretty = (s: string) =>
   s.replace(/\*/g, "×").replace(/\//g, "÷").replace(/-/g, "−").replace(/pi/g, "π");
@@ -59,13 +101,11 @@ const pretty = (s: string) =>
 function render() {
   exprEl.textContent = pretty(expr);
   if (!expr) {
-    resultEl.textContent = "0";
-    resultEl.classList.remove("error");
+    setResult("0");
     return;
   }
   try {
-    resultEl.textContent = justEvaluated ? resultEl.textContent : formatNumber(evaluate(expr));
-    resultEl.classList.remove("error");
+    if (!justEvaluated) setResult(formatNumber(evaluate(expr)));
   } catch {
     // Live preview only: keep last good value while typing an incomplete expression
   }
@@ -79,7 +119,7 @@ function input(token: string) {
   snapshot();
   if (justEvaluated) {
     // Continue from result when an operator is pressed, else start fresh
-    expr = isOperator || token === "%" || token === "!" ? resultEl.textContent ?? "" : "";
+    expr = isOperator || token === "%" || token === "!" ? getRaw() : "";
     justEvaluated = false;
   }
 
@@ -116,7 +156,7 @@ function backspace() {
 function toggleSign() {
   snapshot();
   if (justEvaluated) {
-    expr = resultEl.textContent ?? "";
+    expr = getRaw();
     justEvaluated = false;
   }
   if (!expr) return;
@@ -128,11 +168,10 @@ function equals() {
   if (!expr || justEvaluated) return;
   try {
     const value = formatNumber(evaluate(expr));
-    history = [{ expr: pretty(expr), result: value }, ...history].slice(0, 50);
+    history = [{ expr: pretty(expr), result: value, raw: expr }, ...history].slice(0, 50);
     store.set("calc.history", history);
     renderHistory();
-    resultEl.textContent = value;
-    resultEl.classList.remove("error");
+    setResult(value);
     justEvaluated = true;
     evalExpr = expr;
     exprEl.textContent = `${pretty(expr)} =`;
@@ -146,7 +185,27 @@ function equals() {
   }
 }
 
+function renderRecent() {
+  recentEl.replaceChildren();
+  for (const item of history.slice(0, 3).reverse()) {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.title = "Click to reuse this calculation";
+    btn.textContent = `${item.expr} = ${group(item.result)}`;
+    btn.addEventListener("click", () => {
+      snapshot();
+      expr = item.raw ?? item.result;
+      justEvaluated = false;
+      render();
+    });
+    li.append(btn);
+    recentEl.append(li);
+  }
+}
+
 function renderHistory() {
+  renderRecent();
   historyList.replaceChildren();
   if (history.length === 0) {
     const li = document.createElement("li");
@@ -161,7 +220,7 @@ function renderHistory() {
     btn.type = "button";
     btn.innerHTML = "<small></small><strong></strong>";
     btn.querySelector("small")!.textContent = item.expr;
-    btn.querySelector("strong")!.textContent = item.result;
+    btn.querySelector("strong")!.textContent = group(item.result);
     btn.addEventListener("click", () => {
       expr = item.result;
       justEvaluated = false;
@@ -188,6 +247,7 @@ keysEl.addEventListener("click", (e) => {
   else if (a === "back") backspace();
   else if (a === "neg") toggleSign();
   else if (a === "equals") equals();
+  else if (a === "mc" || a === "mr" || a === "mplus" || a === "mminus") memoryAction(a);
   if (navigator.vibrate) navigator.vibrate(8);
 });
 
@@ -199,7 +259,7 @@ document.addEventListener("keydown", (e) => {
       return;
     }
     if (e.key.toLowerCase() === "c" && !window.getSelection()?.toString()) {
-      navigator.clipboard?.writeText(resultEl.textContent ?? "").then(() => showToast("Copied"));
+      navigator.clipboard?.writeText(getRaw()).then(() => showToast("Copied"));
     }
     return;
   }
@@ -222,6 +282,10 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "/" || e.key === "'") e.preventDefault();
 });
 
+resultEl.addEventListener("click", () => {
+  navigator.clipboard?.writeText(getRaw()).then(() => showToast("Copied"));
+});
+resultEl.title = "Click to copy";
 $("undoBtn").addEventListener("click", undo);
 
 // Sci mode
@@ -262,4 +326,5 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 }
 
 renderHistory();
+renderMemory();
 render();
