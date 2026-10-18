@@ -23,9 +23,11 @@
 
       <section class="calc" aria-label="Calculator">
         <div class="screen">
-          <ul id="recent" class="recent" aria-label="Recent calculations"></ul>
           <div id="memBadge" class="mem-badge"></div>
-          <div id="expr" class="expr" aria-live="off"></div>
+          <div class="expr-row">
+            <input id="expr" class="expr" type="text" inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Expression (click to move the cursor and edit)" />
+            <span id="eqMark" class="eq-mark" hidden>=</span>
+          </div>
           <output id="result" class="result" aria-live="polite">0</output>
         </div>
 
@@ -69,6 +71,11 @@
           <button data-k=".">.</button>
           <button data-a="equals" class="eq" aria-label="equals">=</button>
         </div>
+      </section>
+
+      <section class="recent-card" aria-label="Recent calculations">
+        <h2>Recent <small>· Esc starts a new set · last 3 sets</small></h2>
+        <ul id="recent" class="recent"></ul>
       </section>
 
       <aside id="history" class="history" hidden aria-label="History">
