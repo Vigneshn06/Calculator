@@ -63,22 +63,30 @@ export function evaluate(src: string): number {
   const tokens = tokenize(src);
   let pos = 0;
   const peek = () => tokens[pos];
+  // Percent semantics like a handheld calculator: "A + B%" = A + A*B/100 (same for "-").
+  // Tracks whether the most recently parsed term was a bare percentage.
+  let pct = false;
+  let termIsPercent = false;
   const isOp = (v: string) => peek()?.t === "op" && (peek() as { v: string }).v === v;
 
   function parseExpr(): number {
     let left = parseTerm();
     while (isOp("+") || isOp("-")) {
       const op = (tokens[pos++] as { v: string }).v;
-      const right = parseTerm();
+      let right = parseTerm();
+      if (termIsPercent) right = left * right;
       left = op === "+" ? left + right : left - right;
     }
     return left;
   }
 
   function parseTerm(): number {
+    pct = false;
     let left = parseUnary();
+    let pure = pct;
     for (;;) {
       if (isOp("*") || isOp("/")) {
+        pure = false;
         const op = (tokens[pos++] as { v: string }).v;
         const right = parseUnary();
         if (op === "/" && right === 0) throw new CalcError("Cannot divide by zero");
@@ -87,17 +95,20 @@ export function evaluate(src: string): number {
         // "%" followed by an operand = modulo, otherwise percent (handled in postfix)
         const next = tokens[pos + 1];
         const isModulo =
-          next && (next.t !== "op" || next.v === "(" || next.v === "-" || next.v === "+");
+          next && (next.t !== "op" || next.v === "(");
         if (!isModulo) break;
+        pure = false;
         pos++;
         const right = parseUnary();
         if (right === 0) throw new CalcError("Cannot divide by zero");
         left = left % right;
       } else if (peek() && (peek()!.t !== "op" || isOp("("))) {
         // implicit multiplication: 2(3), 2pi, 3sqrt(4)
+        pure = false;
         left *= parsePower();
       } else break;
     }
+    termIsPercent = pure;
     return left;
   }
 
@@ -116,6 +127,7 @@ export function evaluate(src: string): number {
   function parsePower(): number {
     const base = parsePostfix();
     if (isOp("^")) {
+      pct = false;
       pos++;
       return Math.pow(base, parseUnary());
     }
@@ -124,6 +136,7 @@ export function evaluate(src: string): number {
 
   function parsePostfix(): number {
     let v = parsePrimary();
+    pct = false;
     for (;;) {
       if (isOp("!")) {
         pos++;
@@ -131,6 +144,7 @@ export function evaluate(src: string): number {
       } else if (isOp("%") && !startsOperandAt(pos + 1)) {
         pos++;
         v = v / 100;
+        pct = true;
       } else break;
     }
     return v;
@@ -139,7 +153,7 @@ export function evaluate(src: string): number {
   function startsOperandAt(i: number): boolean {
     const t = tokens[i];
     if (!t) return false;
-    return t.t !== "op" || t.v === "(" || t.v === "-" || t.v === "+";
+    return t.t !== "op" || t.v === "(";
   }
 
   function parsePrimary(): number {

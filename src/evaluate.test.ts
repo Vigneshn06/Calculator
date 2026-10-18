@@ -17,6 +17,13 @@ describe("evaluate", () => {
     expect(evaluate("200 * 10%")).toBe(20);
     expect(evaluate("10 % 3")).toBe(1);
   });
+  it("treats A + B% as a percentage of A", () => {
+    expect(evaluate("2700000 + 8%")).toBe(2916000);
+    expect(evaluate("100 - 10%")).toBe(90);
+    expect(evaluate("200 + 10% + 10%")).toBe(242);
+    expect(evaluate("200 * 10%")).toBe(20);
+    expect(evaluate("50 + 2 * 10%")).toBe(50.2);
+  });
   it("supports functions, constants and implicit multiplication", () => {
     expect(evaluate("sqrt(16)")).toBe(4);
     expect(evaluate("2(3 + 1)")).toBe(8);
