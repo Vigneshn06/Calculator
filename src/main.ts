@@ -38,6 +38,7 @@ let history = store.get<HistoryItem[]>("calc.history", []);
 // Undo: stack of *editable* expressions. Undoing restores the expression
 // (not a computed result), so `5+7` -> `12` -> `12*50%` -> undo gives `5+7` again.
 const undoStack: string[] = [];
+let chaining = false; // true while continuing from a previous result (merged into one history entry)
 let evalExpr = ""; // expression that produced the currently displayed result
 
 function snapshot() {
@@ -119,7 +120,17 @@ function input(token: string) {
   snapshot();
   if (justEvaluated) {
     // Continue from result when an operator is pressed, else start fresh
-    expr = isOperator || token === "%" || token === "!" ? getRaw() : "";
+    const continues = isOperator || token === "%" || token === "!";
+    if (continues) {
+      // Keep the whole chain as one expression: 20+50 then +30 => 20+50+30
+      const additive = token === "+" || token === "-";
+      const compound = /[+\-*/%^]/.test(evalExpr.slice(1));
+      expr = !additive && compound ? `(${evalExpr})` : evalExpr;
+      chaining = true;
+    } else {
+      expr = "";
+      chaining = false;
+    }
     justEvaluated = false;
   }
 
@@ -143,6 +154,7 @@ function clearAll() {
   snapshot();
   expr = "";
   justEvaluated = false;
+  chaining = false;
   render();
 }
 
@@ -158,6 +170,7 @@ function toggleSign() {
   if (justEvaluated) {
     expr = getRaw();
     justEvaluated = false;
+    chaining = false;
   }
   if (!expr) return;
   expr = expr.startsWith("-(") && expr.endsWith(")") ? expr.slice(2, -1) : `-(${expr})`;
@@ -168,7 +181,9 @@ function equals() {
   if (!expr || justEvaluated) return;
   try {
     const value = formatNumber(evaluate(expr));
-    history = [{ expr: pretty(expr), result: value, raw: expr }, ...history].slice(0, 50);
+    const entry = { expr: pretty(expr), result: value, raw: expr };
+    // A chained step updates the existing entry instead of adding a new one
+    history = (chaining && history.length ? [entry, ...history.slice(1)] : [entry, ...history]).slice(0, 50);
     store.set("calc.history", history);
     renderHistory();
     setResult(value);
@@ -197,6 +212,7 @@ function renderRecent() {
       snapshot();
       expr = item.raw ?? item.result;
       justEvaluated = false;
+      chaining = false;
       render();
     });
     li.append(btn);
@@ -224,6 +240,7 @@ function renderHistory() {
     btn.addEventListener("click", () => {
       expr = item.result;
       justEvaluated = false;
+      chaining = false;
       render();
     });
     li.append(btn);
